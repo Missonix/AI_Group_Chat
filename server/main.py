@@ -1,6 +1,6 @@
 import os
 from robyn import Request, Response, Robyn, status_codes, HttpMethod
-from apps.products.api_routes import products_api_routes # 导入商品服务接口路由
+# from apps.products.api_routes import products_api_routes # 导入商品服务接口路由
 from apps.users.api_routes import users_api_routes # 导入用户接口路由
 from apps.users.views.view_routes import users_view_routes # 导入用户视图路由
 from apps.chat.api_routes import chat_api_routes # 导入聊天接口路由
@@ -25,7 +25,7 @@ configure_cors(app)
 # serve_static_files(app)
 
 # 注册商品服务接口路由
-products_api_routes(app)
+# products_api_routes(app)
 
 # 注册用户服务接口路由
 users_api_routes(app)

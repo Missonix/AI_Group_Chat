@@ -42,3 +42,13 @@ def configure_cors(app: Robyn):
         "http://test.com/"  # 去掉末尾斜杠
     ])
 
+# 数据库配置
+DB_CONFIG = {
+    'host': 'localhost',
+    'port': 3306,
+    'user': 'root',
+    'password': 'root',
+    'database': 'aiweb',
+    'charset': 'utf8mb4'
+}
+
