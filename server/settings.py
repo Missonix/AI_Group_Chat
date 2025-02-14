@@ -48,7 +48,7 @@ DB_CONFIG = {
     'port': 3306,
     'user': 'root',
     'password': 'root',
-    'database': 'aiweb',
+    'database': 'aidata',
     'charset': 'utf8mb4'
 }
 

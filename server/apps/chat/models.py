@@ -13,7 +13,7 @@ class ChatSession(Base):
     """
     __tablename__ = 'chat_sessions'
     
-    session_id = Column(String(20), primary_key=True, index=True)
+    session_id = Column(String(36), primary_key=True, index=True)
     user_id = Column(String(20), ForeignKey('users.user_id'), index=True, nullable=False)  # 关联用户表
     title = Column(String(100), default="新会话")                  # 会话标题
     message_count = Column(Integer, default=0)                   # 消息条数
@@ -52,10 +52,10 @@ class ChatMessage(Base):
     
     message_id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String(20), nullable=True)
-    stream_id = Column(String(20), nullable=True)
+    stream_id = Column(String(36), nullable=True)
     content = Column(Text, nullable=False)                        # 消息内容（使用Text类型支持长文本）
     role = Column(String(20), nullable=False)                     # 消息角色：user/assistant/system
-    session_id = Column(String(20), ForeignKey('chat_sessions.session_id'), index=True)  # 关联会话表
+    session_id = Column(String(36), ForeignKey('chat_sessions.session_id'), index=True)  # 关联会话表
     created_at = Column(DateTime, default=datetime.utcnow)      # 创建时间
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # 更新时间
     is_deleted = Column(Boolean, default=False)                   # 软删除标记

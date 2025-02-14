@@ -32,6 +32,10 @@ async def create_session_service(request: Request) -> Response:
         # access_token = data["access_token"]
         # if not TokenService.verify_token(access_token):
         #     return ApiResponse.error(message="token验证失败，请重新登录！")
+        if not user_id:
+            return ApiResponse.error(message="缺少必要参数 user_id")
+
+        session_id = generate_session_id()
         
         async with AsyncSessionLocal() as db:
             # 判断用户存在
@@ -41,12 +45,13 @@ async def create_session_service(request: Request) -> Response:
 
             session = await chat_crud.create_session(
                 db, 
-                session_id=generate_session_id(),
+                session_id=session_id,
                 user_id=user_id,
                 title=data.get("title", "新会话")
             )
             return ApiResponse.success(data=session.to_dict())
     except Exception as e:
+        print("##################未知错误#########################")
         return ApiResponse.error(message=str(e))
     
 

@@ -7,6 +7,8 @@ export interface ChatMessage extends BaseEntity {
   role: string
   session: ChatSession
   type?: string
+  visibleChars?: number
+  is_complete?: boolean
 }
 
 export interface ChatSession extends BaseEntity {
@@ -16,6 +18,7 @@ export interface ChatSession extends BaseEntity {
   message_count: number
   messages: ChatMessage[]
 }
+
 export interface Statistic {
   chatCount: number
   tokenCount: number
@@ -42,6 +45,7 @@ export interface User extends BaseEntity {
   ip_address: string
   avatar?: string
 }
+
 export class LoginResponse {
   email: string
   ip_address: string
@@ -93,4 +97,13 @@ export interface LoginData {
   email: string
   refresh_token: string
   ip_address: string
+}
+
+// 添加 WebSocket 消息类型
+export interface WebSocketMessage {
+  text: string
+  sender: 'user' | 'ai' | 'system'
+  stream_id?: string
+  type?: string
+  is_complete?: boolean
 }

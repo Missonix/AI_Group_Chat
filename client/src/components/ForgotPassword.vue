@@ -67,8 +67,12 @@ const handleLogin = async () => {
       if (success) {
         ElMessage.success('登录成功')
       }
-    } catch (err) {
-      // 错误处理已在store完成
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        ElMessage.error(err.message || '修改失败')
+      } else {
+        ElMessage.error('修改失败')
+      }
     }
   })
 }

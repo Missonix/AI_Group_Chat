@@ -120,8 +120,12 @@ const handleRegister = () => {
         ElMessage.success('注册成功')
         router.push('/') // 新增跳转
       }
-    } catch (err: any) {
-      ElMessage.error(err.message || '注册失败')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        ElMessage.error(err.message || '注册失败')
+      } else {
+        ElMessage.error('注册失败')
+      }
     }
   })
 }

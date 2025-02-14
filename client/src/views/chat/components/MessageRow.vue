@@ -1,4 +1,4 @@
-<!-- 整个div是用来调整内部消息的位置，每条消息占的空间都是一整行，然后根据right还是left来调整内部的消息是靠右边还是靠左边 -->
+整个div是用来调整内部消息的位置，每条消息占的空间都是一整行，然后根据right还是left来调整内部的消息是靠右边还是靠左边
 <template>
   <div :class="['message-row', message.role === 'user' ? 'right' : 'left']">
     <!-- 消息展示，分为上下，上面是头像，下面是消息 -->
@@ -32,7 +32,6 @@ import { ref, watch, computed } from 'vue'
 import type { PropType } from 'vue'
 import type { ChatMessage } from '../../../../typings'
 import logo from '@/assets/picture/our-team-1.jpg'
-import TextLoading from '@/views/chat/components/TextLoading.vue'
 // message：接受消息对象，展示消息内容和头像，并且根据角色调整消息位置。
 // avatar：用户头像，如果角色是 Assistant则使用 logo。
 const props = defineProps({

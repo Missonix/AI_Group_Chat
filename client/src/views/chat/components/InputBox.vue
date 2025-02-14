@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="input-box">
     <el-input v-model="inputMessage" placeholder="输入消息..." @keyup.enter="sendMessage" />
     <el-button type="primary" @click="sendMessage">发送</el-button>
@@ -57,4 +57,4 @@ const sendMessage = () => {
   height: 40px;
   padding: 0 20px;
 }
-</style>
+</style> -->

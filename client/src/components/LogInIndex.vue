@@ -56,6 +56,7 @@
 
 <script setup lang="ts" name="LoginIndex">
 import { ref, computed } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
 import SMSVerification from '@/components/common/SMSVerification.vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -77,11 +78,24 @@ const currentRules = computed(() => {
   return isSMSLogin.value ? smsRules : passwordRules
 })
 
-const passwordRules = {
+// 定义验证器的类型
+type ValidateCallback = (error?: Error) => void
+type ValidateRule = {
+  required?: boolean
+  message?: string
+  trigger?: 'blur' | 'change'
+  validator?: (rule: unknown, value: string, callback: ValidateCallback) => void
+  pattern?: RegExp
+  min?: number
+  max?: number
+  len?: number
+}
+
+const passwordRules: FormRules = {
   account: [
     { required: true, message: '请输入手机号或邮箱', trigger: 'blur' },
     {
-      validator: (rule: any, value: string, callback: Function) => {
+      validator: (rule: unknown, value: string, callback: ValidateCallback) => {
         if (!/^(1[3-9]\d{9}|[\w-]+@[\w-]+\.\w+)$/.test(value)) {
           callback(new Error('请输入有效的手机号或邮箱'))
         } else {
@@ -118,40 +132,49 @@ const toggleLoginMethod = () => {
   }
 }
 
-const formRef = ref(null)
+// 修改 formRef 的类型
+const formRef = ref<FormInstance | null>(null)
 
 const handleLogin = async () => {
-  if (isLoading.value) return // 添加防重复提交检查
-  formRef.value?.validate(async (valid: boolean) => {
+  if (isLoading.value) return
+  const formEl = formRef.value
+  if (!formEl) return
+
+  try {
+    const valid = await formEl.validate()
     if (!valid) {
       ElMessage.warning('请正确填写登录信息')
       return
     }
 
-    try {
-      isLoading.value = true
-      const success = await userStore.loginbypassword({
-        account: form.value.account,
-        password: form.value.password,
-      })
-      if (success) {
-        ElMessage.success('登录成功')
-      }
-    } catch (err: any) {
-      ElMessage.error(err.message || '登录失败')
-    } finally {
-      isLoading.value = false
+    isLoading.value = true
+    const success = await userStore.loginbypassword({
+      account: form.value.account,
+      password: form.value.password,
+    })
+    if (success) {
+      ElMessage.success('登录成功')
     }
-  })
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      ElMessage.error(err.message || '登录失败')
+    } else {
+      ElMessage.error('登录失败')
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// 修改微信登录函数（示例）
 const loginWithWechat = async () => {
   try {
-    // 示例：跳转微信授权页面
     window.location.href = '/api/auth/wechat'
-  } catch (err) {
-    ElMessage.error('微信登录失败')
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : '微信登录失败，请稍后重试'
+
+    ElMessage.error(errorMessage)
   }
 }
 </script>

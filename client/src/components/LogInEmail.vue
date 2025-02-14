@@ -59,8 +59,12 @@ const handleLogin = async () => {
       if (success) {
         ElMessage.success('登录成功')
       }
-    } catch (err) {
-      ElMessage.error(err.message || '登录失败') // 补全错误提示
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        ElMessage.error(err.message || '登录失败')
+      } else {
+        ElMessage.error('登录失败')
+      }
     }
   })
 }

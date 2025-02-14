@@ -1,4 +1,13 @@
 {
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@typings": ["./typings/index.d.ts"],
+      "@typings/*": ["./typings/*"]
+    },
+    "types": ["node"]
+  },
   "files": [],
   "references": [
     {

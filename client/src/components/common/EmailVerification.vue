@@ -51,17 +51,7 @@
 import { ref, computed, watch } from 'vue'
 import RecaptchaSlider from './CaptchaChallenge.vue'
 import { ElMessage } from 'element-plus'
-import axios from 'axios'
-
-const props = defineProps({
-  verifyType: {
-    type: String,
-    default: 'login',
-  },
-  username: String,
-  email: String,
-  code: String,
-})
+import axios, { AxiosError } from 'axios'
 
 const emit = defineEmits(['update:username', 'update:email', 'update:code', 'submit'])
 
@@ -72,7 +62,6 @@ const form = ref({
 })
 
 const countdown = ref(0)
-const timer: number | null = null
 
 const showCaptcha = ref(false)
 let captchaResolve: (value: boolean) => void
@@ -107,6 +96,19 @@ const handleCaptchaClose = () => {
 // 添加错误状态
 const errorMessage = ref('')
 
+// 定义API响应数据的接口
+interface ApiResponse {
+  code: number
+  message: string
+  data?: unknown
+}
+
+// 定义错误响应数据的接口
+interface ErrorResponse {
+  code: number
+  message: string
+}
+
 const sendCaptcha = async () => {
   try {
     if (!isEmailValid.value || countdown.value > 0) return
@@ -127,7 +129,7 @@ const sendCaptcha = async () => {
     }, 1000)
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<ApiResponse>(
         '/api/users/register/precheck',
         { username: form.value.username, email: form.value.email },
         { withCredentials: true },
@@ -138,12 +140,17 @@ const sendCaptcha = async () => {
       } else {
         handleErrorResponse(response.data)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[ERROR] 验证码发送失败:', err)
-      if (err.response?.data?.code === 422) {
-        ElMessage.error(err.response.data.message || '邮箱已被注册')
-      } else if (err.response?.data?.code === 429) {
-        ElMessage.error(err.response.data.message || '请求过于频繁，请稍后再试')
+      if (err instanceof AxiosError && err.response?.data) {
+        const errorData = err.response.data as ErrorResponse
+        if (errorData.code === 422) {
+          ElMessage.error(errorData.message || '邮箱已被注册')
+        } else if (errorData.code === 429) {
+          ElMessage.error(errorData.message || '请求过于频繁，请稍后再试')
+        } else {
+          ElMessage.error('验证码发送失败，请稍后重试')
+        }
       } else {
         ElMessage.error('验证码发送失败，请稍后重试')
       }
@@ -156,8 +163,8 @@ const sendCaptcha = async () => {
   }
 }
 
-// 新增错误处理函数
-const handleErrorResponse = (data: any) => {
+// 修改错误处理函数
+const handleErrorResponse = (data: ApiResponse) => {
   console.log('响应码', data.code)
   if (data.code === 422) {
     ElMessage.error(data.message || '邮箱已被注册')

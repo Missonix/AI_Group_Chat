@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { toRef, watch, computed, ref } from 'vue'
 import { marked } from 'marked'
-import { MessageSender } from '../services/WebSocketService'
+import { type MessageSender } from '@/services/WebSocketService'
 
 interface Props {
   message: MessageSender

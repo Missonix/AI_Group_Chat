@@ -64,6 +64,12 @@
               </li>
             </ul>
             <div class="header-btns ms-5">
+              <template v-if="!userStore.isLoggedIn">
+                <RouterLink class="theme-btn btn-no-design" to="/login">登录</RouterLink>
+              </template>
+              <template v-else>
+                <a class="theme-btn btn-no-design" href="#" @click.prevent="logout">退出</a>
+              </template>
               <a class="theme-btn btn-no-design" href="#">中文 <i class="fa fa-angle-down"></i></a>
               <RouterLink class="theme-btn btn-main" to="/chat">开始生成</RouterLink>
             </div>
@@ -79,6 +85,13 @@
 <script setup lang="ts" name="NavigationBar">
 import { useMain } from '@/composables/useMain'
 import { RouterLink } from 'vue-router'
+import { useUserStore } from '@/stores/user' // 根据实际路径调整
+
+const userStore = useUserStore()
+
+const logout = () => {
+  userStore.logout()
+}
 
 // 从useMain中获取导航栏相关功能
 const { navbarTop } = useMain()
@@ -90,4 +103,7 @@ const { navbarTop } = useMain()
   background-color: var(--body-bg);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 } */
+.header-btns .theme-btn {
+  margin-right: 8px;  /* 添加按钮间距 */
+}
 </style>

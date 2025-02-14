@@ -114,7 +114,7 @@
 
 <script lang="ts" setup>
 import { onMounted, onBeforeUnmount, ref, watch, nextTick, computed } from 'vue'
-import { ChatMessage, ChatSession } from '../../../typings'
+import { ChatMessage, ChatSession } from '@typings/index'
 import {
   findChatSessionById,
   queryChatSession,
@@ -123,7 +123,6 @@ import {
 } from '@/api/chat-session'
 import SessionItem from '@/views/chat/components/SessionItem.vue'
 import { CirclePlus, Close, EditPen, Select, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
-import MessageRow from '@/views/chat/components/MessageRow.vue'
 import MessageInput from '@/views/chat/components/MessageInput.vue'
 import Message from '@/views/chat/components/Message.vue'
 // import { Client } from '@stomp/stompjs'
@@ -135,7 +134,6 @@ import { useIntersectionObserver } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 
 import { webSocketService } from '@/services/WebSocketService'
-import { provide } from 'vue'
 
 const wbmessages = computed(() => webSocketService.messages.value)
 
@@ -202,33 +200,60 @@ const loadSessions = async (page = 1) => {
     loading.value = true
     error.value = null
 
+    // 1. 检查用户登录状态
     if (!userInfo.value?.user_id) {
       throw new Error('用户未登录')
     }
 
+    // 2. 添加日志
+    console.log('开始加载会话列表:', {
+      userId: userInfo.value.user_id,
+      page,
+    })
+
+    // 3. 调用 API
     const response = await queryChatSession(userInfo.value.user_id, {
       pageNum: page,
       pageSize: 20,
       query: {},
     })
 
-    // 分页处理
+    // 4. 检查响应数据
+    console.log('会话列表响应:', response)
+
+    if (!response) {
+      throw new Error('响应为空')
+    }
+
+    if (!response.data) {
+      throw new Error('响应数据为空')
+    }
+
+    if (!Array.isArray(response.data.list)) {
+      throw new Error('响应数据格式错误')
+    }
+
+    // 5. 更新状态
     if (page === 1) {
       sessionList.value = response.data.list
     } else {
       sessionList.value.push(...response.data.list)
     }
 
-    // 自动选择首个会话
+    // 6. 自动选择首个会话
     if (sessionList.value.length > 0 && !activeSession.value.session_id) {
       activeSession.value = sessionList.value[0]
     }
+
+    // 7. 更新分页信息
+    totalPages.value = Math.ceil(response.data.total / 20)
+
   } catch (err) {
-    error.value = err instanceof Error ? err : new Error('加载失败')
     console.error('加载会话列表失败:', err)
+    error.value = err instanceof Error ? err : new Error('加载失败')
+    ElMessage.error(error.value.message)
   } finally {
     loading.value = false
-    // 滚动到底部
   }
 }
 
@@ -295,40 +320,44 @@ const handleDeleteSession = async (deletedSession: ChatSession) => {
   }
 }
 
-// 新增会话
+// 定义WebSocket消息类型
+interface WebSocketMessage {
+  text: string
+  sender: 'user' | 'ai' | 'system'
+  stream_id?: string
+  type?: string
+  is_complete?: boolean
+}
+
+// 修改创建会话部分
 const handleCreateSession = async () => {
   try {
     const userStore = useUserStore()
 
-    // 1. 检查登录状态
     if (!userStore.isLoggedIn) {
       ElMessage.warning('请先登录')
       await router.push('/login')
       return
     }
 
-    // 2. 调用创建接口
     const createRes = await saveChatSession({
-      user_id: userStore.userInfo.user_id!, // 从store获取用户ID
-      title: '新的聊天', // 默认标题
+      user_id: userStore.userInfo.user_id!,
+      title: '新的聊天',
     })
 
-    // 3. 处理成功响应（根据实际接口返回结构调整）
     if (createRes.code === 200) {
-      // 构造完整会话对象
       const newSession = {
         session_id: createRes.data.session_id,
         user_id: createRes.data.user_id,
         title: createRes.data.title,
         message_count: createRes.data.message_count,
         messages: [],
-        createdAt: createRes.data.created_at,
-        updatedAt: createRes.data.updated_at,
+        createdAt: createRes.data.createdAt,
+        updatedAt: createRes.data.updatedAt,
       } as ChatSession
 
-      // 4. 更新前端状态
-      sessionList.value.unshift(newSession) // 插入到列表顶部
-      activeSession.value = newSession // 自动切换新会话
+      sessionList.value.unshift(newSession)
+      activeSession.value = newSession
       ElMessage.success('会话创建成功')
     }
   } catch (error) {
@@ -353,15 +382,15 @@ const handleSendMessage = async (message: string) => {
 
   try {
     // 创建用户消息对象
-    const userMessage: ChatMessage = {
-      message_id: Date.now(), // 临时ID
-      session_id: activeSession.value.session_id,
-      content: message,
-      role: 'user',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_deleted: false,
-    }
+    // const userMessage: ChatMessage = {
+    //   message_id: Date.now(), // 临时ID
+    //   session_id: activeSession.value.session_id,
+    //   content: message,
+    //   role: 'user',
+    //   created_at: new Date().toISOString(),
+    //   updated_at: new Date().toISOString(),
+    //   is_deleted: false,
+    // }
 
     webSocketService.messages.value.push({
       text: message,
@@ -374,32 +403,28 @@ const handleSendMessage = async (message: string) => {
   }
 }
 
-// 监听WebSocket消息
+// 修改WebSocket消息监听
 watch(
   () => webSocketService.messages.value,
   (newMessages) => {
-    newMessages.forEach((msg) => {
-      // 找到对应的AI消息占位
+    newMessages.forEach((msg: WebSocketMessage) => {
       const targetMessage = activeSession.value.messages.find(
-        (m) => m.stream_id === msg.stream_id && m.role === 'assistant',
+        (m: ChatMessage) => m.stream_id === msg.stream_id && m.role === 'assistant'
       )
 
       if (targetMessage) {
-        // 更新消息内容
         targetMessage.content += msg.text
 
-        // 处理逐字显示效果
         if (!targetMessage.visibleChars) targetMessage.visibleChars = 0
         targetMessage.visibleChars = msg.text.length
 
-        // 标记消息完成状态
         if (msg.is_complete) {
           targetMessage.is_complete = true
         }
       }
     })
-  },
-  () => {
+
+    // 将滚动逻辑移到这里
     nextTick(() => {
       const scrollContainer = messageListRef.value?.querySelector('.el-scrollbar__wrap')
       if (scrollContainer) {
@@ -407,7 +432,10 @@ watch(
       }
     })
   },
-  { deep: true, flush: 'post' },
+  {
+    deep: true,
+    flush: 'post'
+  }
 )
 
 const scrollToBottom = () => {

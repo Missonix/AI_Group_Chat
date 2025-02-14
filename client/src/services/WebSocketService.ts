@@ -8,14 +8,23 @@ export interface MessageSender {
   type?: string
 }
 
+// 定义心跳数据类型
+interface HeartbeatData {
+  type: 'heartbeat_ping' | 'heartbeat_pong'
+  timestamp: number
+}
+
+// 定义定时器类型
+type Timer = ReturnType<typeof setTimeout>
+
 export class WebSocketService {
   private ws: WebSocket | null = null
   private messageQueue: string[] = []
   private currentAiMessage = '' // 非响应式变量
-  private aiMessageTimeout: any = null // 用于检测流式响应结束
+  private aiMessageTimeout: Timer | null = null // 修改为 NodeJS.Timeout 类型
   public messages = ref<MessageSender[]>([])
   public isConnected = ref(false)
-  private heartbeatTimer: any = null
+  private heartbeatTimer: Timer | null = null // 修改为 NodeJS.Timeout 类型
   private lastActivity = 0
   private readonly HEARTBEAT_TIMEOUT = 65000 // 65秒
 
@@ -196,7 +205,7 @@ export class WebSocketService {
     console.error('WebSocket error:', error)
   }
 
-  private handleHeartbeat(data: any) {
+  private handleHeartbeat(data: HeartbeatData) {
     // 添加心跳日志
     console.debug(`收到心跳ping: ${data.timestamp}`)
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
