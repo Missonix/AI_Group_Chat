@@ -10,7 +10,7 @@ import type {
 import { ref, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-import type { PersistedStateOptions } from 'pinia-plugin-persistedstate'
+import { type PersistenceOptions } from 'pinia-plugin-persistedstate'
 
 // 定义认证响应数据的接口
 interface AuthResponse {
@@ -239,6 +239,6 @@ export const useUserStore = defineStore<'user', UserStore>(
       key: 'user',
       storage: localStorage,
       paths: ['userInfo', 'isLoggedIn'],
-    } satisfies PersistedStateOptions
+    } as PersistenceOptions,
   }
 )

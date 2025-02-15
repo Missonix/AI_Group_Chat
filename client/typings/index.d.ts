@@ -1,10 +1,10 @@
 export interface ChatMessage extends BaseEntity {
-  messg_id: int
-  type: string
+  message_id: number
+  type?: string
   stream_id: string
   session_id: string
   content: string
-  role: string
+  role: 'user' | 'assistant' | 'system'
   session: ChatSession
   type?: string
   visibleChars?: number
@@ -76,7 +76,6 @@ export interface Page<T> {
 }
 
 export interface BaseEntity {
-  // id: string
   updatedAt: string
   createdAt: string
 }

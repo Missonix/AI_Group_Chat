@@ -114,7 +114,7 @@
 
 <script lang="ts" setup>
 import { onMounted, onBeforeUnmount, ref, watch, nextTick, computed } from 'vue'
-import { ChatMessage, ChatSession } from '@typings/index'
+import type { ChatMessage, ChatSession } from '../../../typings/index'
 import {
   findChatSessionById,
   queryChatSession,
@@ -166,9 +166,8 @@ const activeSession = ref<ChatSession>({
   title: '',
   message_count: 0,
   messages: [],
-  created_at: '',
-  updated_at: '',
-  is_deleted: false,
+  createdAt: '',
+  updatedAt: '',
   user_id: '',
 })
 const sessionList = ref([] as ChatSession[])
@@ -323,7 +322,7 @@ const handleDeleteSession = async (deletedSession: ChatSession) => {
 // 定义WebSocket消息类型
 interface WebSocketMessage {
   text: string
-  sender: 'user' | 'ai' | 'system'
+  sender: 'user' | 'assistant' | 'system'
   stream_id?: string
   type?: string
   is_complete?: boolean
@@ -409,7 +408,7 @@ watch(
   (newMessages) => {
     newMessages.forEach((msg: WebSocketMessage) => {
       const targetMessage = activeSession.value.messages.find(
-        (m: ChatMessage) => m.stream_id === msg.stream_id && m.role === 'assistant'
+        (message) => message.stream_id === msg.stream_id && message.role === 'assistant'
       )
 
       if (targetMessage) {
@@ -467,11 +466,13 @@ const handleSessionSwitch = async (session: ChatSession) => {
     // 更新活跃会话
     activeSession.value = {
       ...detail.data,
-      messages: detail.data.messages.map((m) => ({
-        ...m,
-        visibleChars: m.content?.length || 0, // 初始化已显示字符
-      })),
-    }
+      messages: detail.data.messages.map((message: ChatMessage) => ({
+        ...message,
+        message_id: message.message_id || message.message_id, // 兼容后端字段名
+        type: message.type || '', // 确保 type 存在（如果是必选）
+        visibleChars: message.content?.length || 0,
+      })) as ChatMessage[], // 显式类型转换
+    };
 
     // 连接新会话的WebSocket
     await webSocketService.connect(session.session_id)
@@ -488,8 +489,6 @@ const handleSessionSwitch = async (session: ChatSession) => {
     ElMessage.error('会话加载失败')
   } finally {
     loading.value = false
-
-    // 滚动到底部
   }
 }
 </script>
@@ -515,6 +514,7 @@ const handleSessionSwitch = async (session: ChatSession) => {
     display: flex;
     // border-radius: 20px;
     height: 100vh;
+    width: 100vw; /* 确保容器占满视口 */
     background-color: white;
     // box-shadow: 0 0 20px 20px rgba(black, 0.05);
     // margin-top: 70px;
@@ -531,6 +531,7 @@ const handleSessionSwitch = async (session: ChatSession) => {
       display: flex;
       flex-direction: column;
       height: 100%;
+      transform: translateX(0);
       transition: transform 0.3s ease-in-out;
       flex-shrink: 0;
       /* 标题 */
@@ -550,6 +551,8 @@ const handleSessionSwitch = async (session: ChatSession) => {
 
       &.hidden {
         transform: translateX(-100%);
+        position: absolute;
+        left: -300px;
       }
 
       .panel-header {
@@ -612,7 +615,13 @@ const handleSessionSwitch = async (session: ChatSession) => {
       flex: 1;
       display: flex;
       flex-direction: column;
-      transition: margin-left 0.3s ease-in-out;
+      width: calc(100vw - 300px);
+      transition: margin-left 0.3s ease-in-out width 0.3s ease-in-out;
+        /* 当左侧面板隐藏时 */
+      .session-panel.hidden + & {
+        width: 100vw;
+        margin-left: 0;
+      }
 
       .header {
         padding: 20px 20px 0 20px;
@@ -714,5 +723,11 @@ const handleSessionSwitch = async (session: ChatSession) => {
       }
     }
   }
+  /* 调整折叠按钮位置 */
+.toggle-panel-btn {
+  left: 20px;
+  top: 200px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 }
 </style>

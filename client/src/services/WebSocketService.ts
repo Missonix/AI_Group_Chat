@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 export interface MessageSender {
   text: string
-  sender: 'user' | 'ai' | 'system'
+  sender: 'user' | 'assistant' | 'system'
   stream_id?: string
   type?: string
 }
@@ -141,7 +141,7 @@ export class WebSocketService {
     // 创建新消息占位
     const newMessage: MessageSender = {
       text: '',
-      sender: 'ai',
+      sender: 'assistant',
     }
     this.messages.value.push(newMessage)
 
