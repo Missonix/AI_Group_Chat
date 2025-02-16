@@ -1,0 +1,30 @@
+{
+  "id": "4828954",
+  "name": "ai",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "8158605",
+      "name": "新建聊天",
+      "font_class": "xinjianliaotian",
+      "unicode": "e64c",
+      "unicode_decimal": 58956
+    },
+    {
+      "icon_id": "16220404",
+      "name": "侧边栏",
+      "font_class": "cebianlan",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    },
+    {
+      "icon_id": "3633270",
+      "name": "发送",
+      "font_class": "fasong",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    }
+  ]
+}

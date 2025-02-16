@@ -219,4 +219,20 @@ captcha-button:focus,
 :deep(.el-button + .el-button) {
   margin-left: 0;
 }
+
+@media (max-width: 768px) {
+  .login-form {
+    padding: 0 10px;
+
+    .el-input {
+      height: 48px;
+      font-size: 16px;
+    }
+
+    .login-btn {
+      height: 48px;
+      font-size: 16px;
+    }
+  }
+}
 </style>

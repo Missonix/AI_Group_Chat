@@ -27,19 +27,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def configure_cors(app: Robyn):
     """配置CORS"""
     ALLOW_CORS(app, origins=[
-        "http://localhost:8080/",
-        "http://127.0.0.1:8080/",
-        "http://localhost:5173/",
-        "http://127.0.0.1:5173/",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174/",
-        "http://127.0.0.1:5174/",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:3000/",
-        "http://127.0.0.1:3000/",
-        "http://test.com/"  # 去掉末尾斜杠
+        "*"
     ])
 
 # 数据库配置

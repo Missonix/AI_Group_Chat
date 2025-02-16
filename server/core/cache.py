@@ -16,7 +16,7 @@ load_dotenv(os.path.join(BASE_DIR, "robyn.env"))
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 REDIS_DB = int(os.getenv('REDIS_DB', 0))
-REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '123456')
 REDIS_MAX_RETRIES = 3
 REDIS_RETRY_DELAY = 1  # 秒
 

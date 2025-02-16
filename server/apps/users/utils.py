@@ -19,12 +19,12 @@ load_dotenv(os.path.join(BASE_DIR, "robyn.env"))
 
 # SMTP配置
 SMTP_SERVER = 'smtp.163.com'  # 电子邮箱服务器的域名
-SMTP_PORT = 25  # SSL/TLS加密端口
-SMTP_USERNAME = 'ackerman0919@163.com'  # 网站官方邮箱地址
-SMTP_PASSWORD = 'XZfLeejapK58EuVS'  # 邮箱接口授权码
-SMTP_USE_TLS = False  # 使用 SSL/TLS 加密
-SMTP_FROM_EMAIL = 'ackerman0919@163.com'  # 网站官方邮箱地址
-SMTP_FROM_NAME = 'RobynVue'  # 网站名称
+SMTP_PORT = 465  # SSL/TLS加密端口
+SMTP_USERNAME = ''  # 网站官方邮箱地址
+SMTP_PASSWORD = ''  # 邮箱接口授权码
+SMTP_USE_TLS = True  # 使用 SSL/TLS 加密
+SMTP_FROM_EMAIL = ''  # 网站官方邮箱地址
+SMTP_FROM_NAME = 'MISSONIX AI'  # 网站名称
 
 import time
 import struct
@@ -86,7 +86,7 @@ async def send_verification_email(email: str, code: str, username: str = None) -
         message = MIMEMultipart()
         message['From'] = f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
         message['To'] = email
-        message['Subject'] = "RobynVue - 注册验证码"
+        message['Subject'] = "MISSONIX AI - 注册验证码"
 
         if not username:
             username = ""
@@ -95,7 +95,7 @@ async def send_verification_email(email: str, code: str, username: str = None) -
         body = f"""
         尊敬的用户{username}：
         
-        您好！感谢您注册 RobynVue。
+        您好！感谢您注册 MISSONIX AI。
         
         您的验证码是：{code}
         
@@ -104,7 +104,7 @@ async def send_verification_email(email: str, code: str, username: str = None) -
         如果这不是您的操作，请忽略此邮件。
         
         祝您使用愉快！
-        RobynVue 团队
+        MISSONIX AI 团队
         """
         message.attach(MIMEText(body, 'plain', 'utf-8'))
 

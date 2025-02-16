@@ -9,6 +9,8 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap'
 
+import '@/assets/icon/iconfont.css';
+
 // Font Awesome (建议通过npm安装)
 import '@fortawesome/fontawesome-free/css/all.min.css'
 

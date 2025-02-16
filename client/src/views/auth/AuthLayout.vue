@@ -88,4 +88,39 @@
   position: relative;
   z-index: 1001;
 }
+.auth-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fb;
+  flex-direction: column;
+}
+
+.background {
+  display: none;
+}
+
+.form-container {
+  flex: 1;
+  width: 100%;
+  padding: 40px 20px;
+  box-shadow: none;
+}
+
+/* 电脑端样式 */
+@media (min-width: 768px) {
+  .auth-container {
+    flex-direction: row;
+  }
+
+  .background {
+    display: flex;
+    flex: 0 0 35%;
+  }
+
+  .form-container {
+    flex: 0 0 65%;
+    padding: 80px 100px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+}
 </style>

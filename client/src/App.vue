@@ -1,4 +1,7 @@
 <template>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  </head>
   <div class="app">
     <!-- 返回顶部 -->
     <BackTop v-if="!$route.meta.hideNavbar" />
@@ -90,3 +93,5 @@ body {
   opacity: 0;
 }
 </style>
+
+

@@ -39,30 +39,36 @@ watch(
 
 <style scoped>
 .message {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   padding: 2px;
   border-radius: 5px;
   margin: 10px 0;
-  max-width: 70%; /* 设置最大宽度，防止消息过宽 */
+  max-width: 90%; /* 设置最大宽度，防止消息过宽 */
   overflow-wrap: break-word; /* 自动换行 */
   background: #f8f8f8; /* 默认背景颜色 */
   animation: messageTransition 0.3s ease-in-out;
 }
 
 .message--user {
-  padding-left: 20px;
-  padding-right: 20px;
-  background: #e3f2fd;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: #dcedfa;
   align-self: flex-end;
   text-align: left;
   margin-left: auto;
   width: fit-content;
 }
 
-.message--ai {
+.message--assistant {
   padding-left: 20px;
-  padding-right: 10px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   background: #f5f5f5;
   align-self: flex-start;
   text-align: left;
@@ -70,7 +76,9 @@ watch(
 }
 .message--system {
   padding-left: 20px;
-  padding-right: 10px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   background: #f5f5f5;
   align-self: flex-start;
   text-align: left;

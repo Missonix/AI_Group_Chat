@@ -299,4 +299,32 @@ const loginWithWechat = async () => {
 :deep(.el-button + .el-button) {
   margin-left: 0;
 }
+@media (max-width: 768px) {
+  .auth-form {
+    padding: 0 15px;
+  }
+
+  .tab-switch {
+    margin-bottom: 30px;
+
+    .tab-item {
+      font-size: 16px;
+      padding: 10px 20px;
+    }
+  }
+
+  .el-input {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .login-buttons {
+    margin-top: 20px;
+
+    .el-button {
+      height: 48px;
+      font-size: 16px;
+    }
+  }
+}
 </style>

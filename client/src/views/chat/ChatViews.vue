@@ -1,22 +1,20 @@
 <template>
   <!-- 最外层页面于窗口同宽，使聊天面板居中 -->
   <div class="home-view">
-    <el-button v-if="!isSessionPanelVisible" class="toggle-panel-btn" @click="toggleSessionPanel">
-      <el-icon><ArrowRight /></el-icon>
-    </el-button>
+    <!-- <div v-if="!isSessionPanelVisible" class="show-panel-btn iconfont icon-cebianlan" @click="toggleSessionPanel">
+    </div> -->
     <!-- 整个聊天面板 -->
     <div class="chat-panel">
       <!-- 左侧的会话列表 -->
       <div class="session-panel" :class="{ hidden: !isSessionPanelVisible }">
         <div class="panel-header">
           <div class="panel-header-left">
-            <div class="title">AI助手</div>
+            <div class="title"><b>SSAI</b></div>
             <div class="description">构建你的AI助手</div>
           </div>
           <div class="panel-header-right">
-            <el-button class="fold-btn" @click="toggleSessionPanel">
-              <el-icon><ArrowLeft /></el-icon>
-            </el-button>
+            <div class="hide-panel-btn iconfont icon-cebianlan" @click="toggleSessionPanel">
+            </div>
           </div>
         </div>
         <div v-if="loading" class="loading-overlay">
@@ -67,46 +65,54 @@
       <div class="message-panel">
         <!-- 会话名称 -->
         <div class="header">
+          <div class="header-left">
+            <div
+              v-if="!isSessionPanelVisible"
+              class="show-panel-btn iconfont icon-cebianlan"
+              @click="toggleSessionPanel"
+            ></div>
+          </div>
           <div class="front">
-            <!-- 如果处于编辑状态则显示输入框让用户去修改 -->
             <div v-if="isEdit" class="title">
-              <!-- 按回车代表确认修改 -->
               <el-input
                 v-model="activeSession.title"
                 @keydown.enter="handleUpdateSession"
+                @keydown.esc="isEdit = false; activeSession.title = originalTitle"
               ></el-input>
             </div>
-            <!-- 否则正常显示标题 -->
-            <div v-else class="title">{{ activeSession.title }}</div>
-            <div class="description">与AI的{{ activeSession.message_count }}条对话</div>
+            <div v-else class="title" @click="startEdit">
+              <span class="title-text">{{ activeSession.title }}</span>
+            </div>
           </div>
-          <!-- 尾部的编辑按钮 -->
-          <div class="rear">
-            <el-icon :size="20">
-              <!-- 不处于编辑状态显示编辑按钮 -->
-              <EditPen v-if="!isEdit" @click="isEdit = true" />
-              <!-- 处于编辑状态显示取消编辑按钮 -->
-              <div class="edit-buttons" v-else>
-                <Select @click="handleUpdateSession" />
-                <Close @click="isEdit = false" />
+          <div class="header-right">
+            <div class="mobile-actions">
+              <div class="create-btn iconfont icon-xinjianliaotian" @click="handleCreateSession"></div>
+            </div>
+          </div>
+        </div>
+        <!-- <el-divider :border-style="'solid'" class="no-margin-bottom"/> -->
+        <div class="content-container">
+          <div class="message-list" ref="messageListRef">
+            <!-- 添加空状态提示 -->
+            <div v-if="wbmessages.length === 0" class="empty-chat-tip">
+              <div class="welcome-text">
+                我是 SSAI，很高兴遇见你！<br/>
+                有什么可以帮忙你的？
               </div>
-            </el-icon>
+            </div>
+            <!-- 过渡效果 -->
+            <transition-group name="list">
+              <el-scrollbar class="chat-box__content">
+                <template v-for="(message, index) in wbmessages" :key="index">
+                  <Message :message="message" @completeText="handleCompleteText" />
+                </template>
+              </el-scrollbar>
+              <!-- <div class="chat-box__gradient"></div> -->
+            </transition-group>
           </div>
+          <message-input @send="handleSendMessage"></message-input>
         </div>
-        <el-divider :border-style="'solid'" />
-        <div class="message-list" ref="messageListRef">
-          <!-- 过渡效果 -->
-          <transition-group name="list">
-            <el-scrollbar class="chat-box__content">
-              <template v-for="(message, index) in wbmessages" :key="index">
-                <Message :message="message" @completeText="handleCompleteText" />
-              </template>
-            </el-scrollbar>
-            <!-- <div class="chat-box__gradient"></div> -->
-          </transition-group>
-        </div>
-        <!-- 监听发送事件 -->
-        <message-input @send="handleSendMessage"></message-input>
+        <div v-if="isEdit" class="edit-overlay" @click.self="handleUpdateSession"></div>
       </div>
     </div>
   </div>
@@ -122,7 +128,7 @@ import {
   updateSessionTitle,
 } from '@/api/chat-session'
 import SessionItem from '@/views/chat/components/SessionItem.vue'
-import { CirclePlus, Close, EditPen, Select, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import { CirclePlus } from '@element-plus/icons-vue'
 import MessageInput from '@/views/chat/components/MessageInput.vue'
 import Message from '@/views/chat/components/Message.vue'
 // import { Client } from '@stomp/stompjs'
@@ -132,7 +138,6 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useIntersectionObserver } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
-
 import { webSocketService } from '@/services/WebSocketService'
 
 const wbmessages = computed(() => webSocketService.messages.value)
@@ -180,6 +185,8 @@ const { userInfo } = storeToRefs(useUserStore())
 const messageListRef = ref<HTMLElement | null>(null)
 
 const isSessionPanelVisible = ref(true)
+
+const isTitleAutoSet = ref(false)
 
 const toggleSessionPanel = () => {
   isSessionPanelVisible.value = !isSessionPanelVisible.value
@@ -239,8 +246,11 @@ const loadSessions = async (page = 1) => {
       sessionList.value.push(...response.data.list)
     }
 
-    // 6. 自动选择首个会话
-    if (sessionList.value.length > 0 && !activeSession.value.session_id) {
+    // 6. 如果没有历史会话，自动创建一个新会话
+    if (sessionList.value.length === 0) {
+      await handleCreateSession()
+    } else if (!activeSession.value.session_id) {
+      // 如果有会话但没有激活的会话，选择第一个
       activeSession.value = sessionList.value[0]
     }
 
@@ -307,15 +317,53 @@ const handleDeleteSession = async (deletedSession: ChatSession) => {
 
     // 如果删除的是当前会话
     if (activeSession.value.session_id === deletedSession.session_id) {
-      activeSession.value = sessionList.value[0] || {
-        session_id: '',
-        title: '',
-        message_count: 0,
-        messages: [],
+      // 清空当前消息
+      webSocketService.messages.value = []
+      webSocketService.clearMessages()
+
+      // 断开当前连接
+      webSocketService.disconnect()
+
+      // 如果还有其他会话，切换到第一个会话
+      if (sessionList.value.length > 0) {
+        const nextSession = sessionList.value[0]
+
+        // 加载新会话的消息
+        const detail = await findChatSessionById(nextSession.session_id)
+        activeSession.value = {
+          ...detail.data,
+          messages: detail.data.messages.map((message: ChatMessage) => ({
+            ...message,
+            visibleChars: message.content?.length || 0,
+          }))
+        }
+
+        // 连接新会话的WebSocket
+        await webSocketService.connect(nextSession.session_id)
+
+        // 更新消息列表
+        for (const message of activeSession.value.messages) {
+          webSocketService.messages.value.push({
+            text: message.content,
+            sender: message.role,
+          })
+        }
+      } else {
+        // 如果没有其他会话，重置当前会话
+        activeSession.value = {
+          session_id: '',
+          title: '',
+          message_count: 0,
+          messages: [],
+          createdAt: '',
+          updatedAt: '',
+          user_id: '',
+        }
       }
     }
   } catch (error) {
     console.error('删除失败:', error)
+    ElMessage.error('删除会话失败')
   }
 }
 
@@ -328,7 +376,7 @@ interface WebSocketMessage {
   is_complete?: boolean
 }
 
-// 修改创建会话部分
+// 修改创建会话部分，添加返回值
 const handleCreateSession = async () => {
   try {
     const userStore = useUserStore()
@@ -355,9 +403,26 @@ const handleCreateSession = async () => {
         updatedAt: createRes.data.updatedAt,
       } as ChatSession
 
+      isTitleAutoSet.value = false
+
+      // 先更新会话列表
       sessionList.value.unshift(newSession)
+
+      // 切换到新会话并清空消息
+      webSocketService.messages.value = []
+      webSocketService.clearMessages()
+
+      // 断开旧连接
+      webSocketService.disconnect()
+
+      // 更新当前活跃会话
       activeSession.value = newSession
+
+      // 连接新会话的WebSocket
+      await webSocketService.connect(newSession.session_id)
+
       ElMessage.success('会话创建成功')
+      return newSession
     }
   } catch (error) {
     console.error('创建会话失败:', error)
@@ -365,12 +430,62 @@ const handleCreateSession = async () => {
   }
 }
 
-const handleUpdateSession = () => {
-  updateSessionTitle({
-    sessionId: activeSession.value.session_id,
-    new_title: activeSession.value.title,
-  })
-  isEdit.value = false
+// 添加一个变量保存原始标题
+const originalTitle = ref('')
+
+// 修改进入编辑模式的处理
+const startEdit = () => {
+  originalTitle.value = activeSession.value.title
+  isEdit.value = true
+}
+
+// 修改标题更新的处理函数
+const handleUpdateSession = async () => {
+  try {
+    // 如果标题为空或只包含空格，保持原标题
+    if (!activeSession.value.title.trim()) {
+      activeSession.value.title = originalTitle.value
+      isEdit.value = false
+      return
+    }
+
+    // 如果标题没有变化，直接退出编辑模式
+    if (activeSession.value.title === originalTitle.value) {
+      isEdit.value = false
+      return
+    }
+
+    const response = await updateSessionTitle({
+      sessionId: activeSession.value.session_id,
+      new_title: activeSession.value.title,
+    })
+
+    if (response.code === 200) {
+      // 更新左侧会话列表中的标题
+      isTitleAutoSet.value = true
+      const sessionIndex = sessionList.value.findIndex(
+        (s) => s.session_id === activeSession.value.session_id
+      )
+      if (sessionIndex !== -1) {
+        sessionList.value[sessionIndex].title = activeSession.value.title
+        // 强制更新会话列表
+        sessionList.value = [...sessionList.value]
+      }
+
+      ElMessage.success('标题更新成功')
+    } else {
+      // 更新失败，恢复原标题
+      activeSession.value.title = originalTitle.value
+      ElMessage.error('标题更新失败')
+    }
+  } catch (error) {
+    console.error('更新标题失败:', error)
+    // 发生错误时恢复原标题
+    activeSession.value.title = originalTitle.value
+    ElMessage.error('标题更新失败')
+  } finally {
+    isEdit.value = false
+  }
 }
 
 const handleSendMessage = async (message: string) => {
@@ -380,29 +495,59 @@ const handleSendMessage = async (message: string) => {
   }
 
   try {
-    // 创建用户消息对象
-    // const userMessage: ChatMessage = {
-    //   message_id: Date.now(), // 临时ID
-    //   session_id: activeSession.value.session_id,
-    //   content: message,
-    //   role: 'user',
-    //   created_at: new Date().toISOString(),
-    //   updated_at: new Date().toISOString(),
-    //   is_deleted: false,
-    // }
-
+    // 判断是否是第一条用户消息
+    const isFirstUserMessage = activeSession.value.message_count === 0 &&
+                             wbmessages.value.filter(m => m.sender === 'user').length === 0
     webSocketService.messages.value.push({
       text: message,
       sender: 'user',
     })
     webSocketService.sendMessage(message)
+
+    // 如果是第一条用户消息且标题未被修改
+    if (isFirstUserMessage && !isTitleAutoSet.value) {
+      // 截取前20个字符作为标题
+      const newTitle = message.trim().slice(0, 20) || '新对话'
+
+      // 更新本地数据
+      activeSession.value.title = newTitle
+      isTitleAutoSet.value = true
+
+      // 更新左侧会话列表
+      const sessionIndex = sessionList.value.findIndex(
+        s => s.session_id === activeSession.value.session_id
+      )
+      if (sessionIndex !== -1) {
+        sessionList.value[sessionIndex].title = newTitle
+      }
+
+      // 更新数据库
+      await updateSessionTitle({
+        sessionId: activeSession.value.session_id,
+        new_title: newTitle
+      })
+    }
+
+
+    // 更新当前会话的消息数量
+    activeSession.value.message_count += 1
+
+    // 更新左侧会话列表中对应会话的消息数量
+    const sessionIndex = sessionList.value.findIndex(
+      (s) => s.session_id === activeSession.value.session_id
+    )
+    if (sessionIndex !== -1) {
+      sessionList.value[sessionIndex].message_count += 1
+      // 强制更新会话列表
+      sessionList.value = [...sessionList.value]
+    }
   } catch (error) {
     console.error('消息发送失败:', error)
     ElMessage.error('消息发送失败')
   }
 }
 
-// 修改WebSocket消息监听
+// 修改 WebSocket 消息监听，在收到助手回复时也更新消息数量
 watch(
   () => webSocketService.messages.value,
   (newMessages) => {
@@ -419,11 +564,24 @@ watch(
 
         if (msg.is_complete) {
           targetMessage.is_complete = true
+
+          // 当消息完成时，更新消息数量
+          activeSession.value.message_count += 1
+
+          // 更新左侧会话列表中对应会话的消息数量
+          const sessionIndex = sessionList.value.findIndex(
+            (s) => s.session_id === activeSession.value.session_id
+          )
+          if (sessionIndex !== -1) {
+            sessionList.value[sessionIndex].message_count += 1
+            // 强制更新会话列表
+            sessionList.value = [...sessionList.value]
+          }
         }
       }
     })
 
-    // 将滚动逻辑移到这里
+    // 滚动逻辑保持不变
     nextTick(() => {
       const scrollContainer = messageListRef.value?.querySelector('.el-scrollbar__wrap')
       if (scrollContainer) {
@@ -491,6 +649,24 @@ const handleSessionSwitch = async (session: ChatSession) => {
     loading.value = false
   }
 }
+
+watch(isEdit, (val) => {
+  if (val) {
+    nextTick(() => {
+      const input = document.querySelector('.title .el-input__inner') as HTMLInputElement
+      if (input) {
+        input.focus()
+        input.select() // 选中全部文本
+        input.addEventListener('blur', handleUpdateSession)
+      }
+    })
+  } else {
+    const input = document.querySelector('.title .el-input__inner') as HTMLInputElement
+    if (input) {
+      input.removeEventListener('blur', handleUpdateSession)
+    }
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -498,7 +674,15 @@ const handleSessionSwitch = async (session: ChatSession) => {
   position: relative;
   width: 100vw;
   display: flex;
-  // justify-content: center;
+  //justify-content: center;
+  .icon-cebianlan {
+    font-size: 30px;
+  }
+  .show-panel-btn {
+    font-size: 30px;
+    margin-left: 10px;
+    margin-top: 10px;
+  }
 
   .toggle-panel-btn {
     position: absolute;
@@ -512,18 +696,14 @@ const handleSessionSwitch = async (session: ChatSession) => {
   .chat-panel {
     flex: 1;
     display: flex;
-    // border-radius: 20px;
     height: 100vh;
     width: 100vw; /* 确保容器占满视口 */
     background-color: white;
-    // box-shadow: 0 0 20px 20px rgba(black, 0.05);
-    // margin-top: 70px;
     position: relative;
 
     .session-panel {
-      width: 300px;
-      // border-top-left-radius: 20px;
-      // border-bottom-left-radius: 20px;
+      // width: 300px;
+      width: 200px;
       padding: 20px;
       position: relative;
       border-right: 1px solid rgba(black, 0.07);
@@ -590,7 +770,6 @@ const handleSessionSwitch = async (session: ChatSession) => {
       }
 
       .button-wrapper {
-        /* session-panel是相对布局，这边的button-wrapper是相对它绝对布局 */
         position: absolute;
         bottom: 20px;
         left: 0;
@@ -602,6 +781,9 @@ const handleSessionSwitch = async (session: ChatSession) => {
         /* 宽度和session-panel一样宽*/
         width: 100%;
 
+        .back-index{
+          margin-left: 20px;
+        }
         /* 按钮于右侧边界留一些距离 */
         .new-session {
           margin-right: 20px;
@@ -611,123 +793,306 @@ const handleSessionSwitch = async (session: ChatSession) => {
 
     /* 右侧消息记录面板*/
     .message-panel {
-      // width: 700px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      width: calc(100vw - 300px);
-      transition: margin-left 0.3s ease-in-out width 0.3s ease-in-out;
-        /* 当左侧面板隐藏时 */
-      .session-panel.hidden + & {
-        width: 100vw;
-        margin-left: 0;
-      }
+      height: 100vh;
+      position: relative;
 
       .header {
-        padding: 20px 20px 0 20px;
+        padding: 25px 20px 10px;
         display: flex;
-        /* 会话名称和编辑按钮在水平方向上分布左右两边 */
+        height: 50px;
         justify-content: space-between;
-
-        /* 前部的标题和消息条数 */
-        .front {
-          .title {
-            color: rgba(black, 0.7);
-            font-size: 20px;
-          }
-
-          .description {
-            margin-top: 10px;
-            color: rgba(black, 0.5);
-          }
-        }
-
-        /* 尾部的编辑和取消编辑按钮 */
-        .rear {
-          display: flex;
-          align-items: center;
-        }
-      }
-
-      .edit-buttons {
-        display: flex;
         align-items: center;
-        gap: 10px; /* 调整间距 */
-      }
+        position: relative;
 
-      .message-list {
-        height: 100%; // 确保容器高度正确
-        flex: 1;
-        padding: 15px;
-        // 消息条数太多时，溢出部分滚动
-        overflow-y: scroll;
-        // 当切换聊天会话时，消息记录也随之切换的过渡效果
-        .list-enter-active,
-        .list-leave-active {
-          transition: all 0.5s ease;
+        .header-left {
+          width: 40px;
+          .show-panel-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+
+            &:hover {
+              color: #333;
+              transform: scale(1.1);
+            }
+          }
         }
 
-        .list-enter-from,
-        .list-leave-to {
-          opacity: 0;
-          transform: translateX(30px);
+        .front {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 0 40px;
+
+          .title {
+            max-width: 400px;
+            min-width: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+
+            .title-text {
+              display: block;
+              font-size: 18px;
+              font-weight: 800;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-align: center;
+            }
+
+            &:hover {
+              background: rgba(0,0,0,0.05);
+            }
+
+            :deep(.el-input__inner) {
+              text-align: center;
+              font-size: 18px;
+              font-weight: 800;
+            }
+          }
+        }
+
+        .header-right {
+          // width: 40px;
+          display: flex;
+          justify-content: flex-end;
+
+          .mobile-actions {
+            .create-btn {
+              padding-right: 10px;
+              padding-top: 10px;
+              font-size: 24px;
+              cursor: pointer;
+              color: #666;
+              transition: all 0.3s ease;
+
+              &:hover {
+                color: #333;
+                transform: scale(1.1);
+              }
+            }
+          }
         }
       }
-      .chat-box__content {
-        height: 100%;
-        padding: 10px;
-        border-radius: 4px;
-      }
-      .chat-box__gradient {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
-        pointer-events: none; /* 防止遮罩影响点击 */
-      }
-      .chat-box__gradient {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
-        pointer-events: none; /* 防止遮罩影响点击 */
-      }
 
-      .chat-box .el-scrollbar {
+      .content-container {
         flex: 1;
-        min-height: 0; /* 重要：修复滚动容器高度问题 */
-      }
-      .el-scrollbar {
-        flex: 1;
-        min-height: 0; /* 重要：修复滚动容器高度问题 */
-        height: 100%;
-      }
-
-      .el-scrollbar__wrap {
-        overflow-x: hidden;
-        overflow-y: auto; // 确保允许垂直滚动
-        height: 100%;
-      }
-
-      .el-scrollbar__view {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        padding-bottom: 30px; /* 增加底部空间 */
-        min-height: 100%; /* 强制填满容器 */
+        align-items: center; // 内容居中
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto; // 水平居中
+        // padding: 0 10px;
+        overflow: hidden;
+
+        .message-list {
+          width: 100%;
+          flex: 1;
+          overflow-y: auto;
+          padding-top: 10px;
+          padding-bottom: 0;
+          position: relative; // 添加相对定位
+
+          // 添加空状态样式
+          .empty-chat-tip {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+
+            .welcome-text {
+              font-size: 24px;
+              font-weight: bold;
+              color: rgba(0, 0, 0, 0.25); // 半透明黑色
+              line-height: 1.5;
+              white-space: pre-line; // 保留换行符
+            }
+          }
+        }
+
+        .message-input {
+          width: 100%;
+          margin-top: 0;
+          margin-bottom: 20px;
+        }
       }
     }
   }
   /* 调整折叠按钮位置 */
 .toggle-panel-btn {
   left: 20px;
-  top: 200px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  top: 20px; // 原200px
+  z-index: 1000;
 }
+}
+
+.mobile-actions {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  align-items: center;
+  gap: 12px;
+
+  .new-btn {
+    padding: 8px;
+  }
+
+  .fold-icon {
+    font-size: 20px;
+    color: #666;
+    padding: 6px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+  }
+}
+
+.hide-panel-btn{
+  padding-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .button-wrapper {
+    display: none !important;
+  }
+  .show-panel-btn {
+    font-size: 30px;
+    margin-left: 10px;
+    margin-top: 20px;
+  }
+  .create-btn{
+    font-size: 26px;
+  }
+  .home-view {
+    .chat-panel {
+      position: relative;
+      overflow-x: hidden; // 防止横向滚动
+      .session-panel {
+        position: fixed;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+        height: 100vh;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        &.hidden {
+          transform: translateX(-100%);
+        }
+      }
+
+      .message-panel {
+        width: 100vw;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
+        // 当侧边栏显示时整体右移
+        .session-panel:not(.hidden) + & {
+          transform: translateX(85%);
+        }
+        .header {
+          padding: 10px;
+          height: auto;
+          position: relative;
+          padding: 10px 80px 10px 20px !important;
+
+      .front {
+        width: 100%;
+
+        .title {
+          max-width: 60vw;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      .mobile-actions {
+          display: flex;
+        }
+        }
+
+        .message-list {
+          padding: 5px;
+        }
+      }
+    }
+
+    // 调整消息气泡
+    .message {
+      max-width: 90% !important;
+      font-size: 14px;
+      padding: 8px !important;
+    }
+
+    // 输入框适配
+    .message-input {
+      position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            padding: 10px;
+            background: white;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+
+            // 侧边栏显示时同步右移
+            .session-panel:not(.hidden) + .message-panel & {
+              transform: translateX(85%);
+              width: calc(100vw - 85%);
+              left: auto;
+              right: 0;
+            }
+
+      :deep(.el-textarea__inner) {
+        min-height: 50px !important;
+        padding: 8px !important;
+      }
+
+      .button-area {
+        height: 25px;
+        padding: 0 8px;
+
+        .iconfont.icon-fasong {
+          font-size: 24px;
+          padding-bottom: 15px;
+        }
+      }
+    }
+  }
+
+  .content-container {
+    width: 100vw;
+    padding: 0 10px;
+    padding-bottom: 80px;
+
+    .message-list {
+      padding: 5px;
+
+      .message {
+        max-width: 90% !important;
+        padding: 8px !important;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+
+.edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
 }
 </style>

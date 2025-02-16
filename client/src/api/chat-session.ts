@@ -33,5 +33,5 @@ export const validChatSession = (id: string) => {
   return requestWithToken<boolean>(`/chatSession/${id}/valid`, 'POST', {})
 }
 export const deleteChatSession = (sessionId: string) => {
-  return requestWithToken<boolean>(`/api/chat/sessions/${sessionId}`, 'DELETE', {})
+  return requestWithToken<boolean>(`/aichat/deletesession/${sessionId}`, 'DELETE', {})
 }

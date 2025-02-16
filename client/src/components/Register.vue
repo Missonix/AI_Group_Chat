@@ -261,4 +261,24 @@ captcha-button:focus,
   text-decoration: none;
   margin-left: 5px;
 }
+
+@media (max-width: 768px) {
+  .register-form {
+    padding: 0 10px;
+
+    .el-input {
+      height: 48px;
+      font-size: 16px;
+    }
+
+    .register-btn {
+      height: 48px;
+      font-size: 16px;
+    }
+
+    .agreement {
+      font-size: 13px;
+    }
+  }
+}
 </style>
