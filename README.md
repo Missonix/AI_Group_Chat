@@ -12,7 +12,7 @@
 <br>
 **移动端界面**
 
-| 图片1 | 图片2 |
+| 移动端界面1 | 移动端界面2 |
 |-------|-------|
 | ![移动端界面1](https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04) | ![移动端界面2](https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e) |
 
