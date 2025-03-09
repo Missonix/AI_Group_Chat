@@ -1,6 +1,6 @@
 # AI Chat Web Application
 
-一个基于Vue3和Robyn的AI聊天应用，提供智能对话和用户管理功能。
+一个基于Vue3框架和Robyn的AI聊天应用，提供智能对话和用户管理功能。
 
 ## 项目概述
 
@@ -8,7 +8,9 @@
 ## 页面展示
 **PC端界面**
 ![image](https://github.com/user-attachments/assets/afd8d703-42e5-4d99-a0c0-28fff830649f)
+
 **移动端界面**
+
 ![image](https://github.com/user-attachments/assets/66291259-0e69-4695-8c83-de9455c01518)
 
 ## 技术栈
