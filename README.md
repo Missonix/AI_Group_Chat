@@ -7,11 +7,11 @@
 该项目是一个现代化的AI聊天网站，前端使用Vue3开发，后端使用Python的Robyn框架开发。项目采用前后端分离架构，提供流畅的用户体验和可靠的后端服务。
 ## 页面展示
 **PC端界面**
-<img src="https://github.com/user-attachments/assets/afd8d703-42e5-4d99-a0c0-28fff830649f" width="600" height="400" alt="PC端界面">
+<img src="https://github.com/user-attachments/assets/afd8d703-42e5-4d99-a0c0-28fff830649f" width="950" height="450" alt="PC端界面">
 **移动端界面**
 
-<img src="https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04" width="300" height="200" alt="移动端界面1">
-<img src="https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e" width="300" height="200" alt="移动端界面2">
+<img src="https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04" width="100" height="200" alt="移动端界面1">
+<img src="https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e" width="100" height="200" alt="移动端界面2">
 
 ## 技术栈
 
