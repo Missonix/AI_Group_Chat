@@ -10,8 +10,9 @@
 <img src="https://github.com/user-attachments/assets/afd8d703-42e5-4d99-a0c0-28fff830649f" width="950" height="450" alt="PC端界面">
 **移动端界面**
 
-<img src="https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04" width="100" height="200" alt="移动端界面1">
-<img src="https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e" width="100" height="200" alt="移动端界面2">
+<div>
+  <img src="https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04" width="200" height="400" alt="移动端界面1"><img src="https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e" width="200" height="400" alt="移动端界面2">
+</div>
 
 ## 技术栈
 
