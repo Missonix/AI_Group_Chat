@@ -11,8 +11,7 @@
 
 **移动端界面**
 
-![image](https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04)
-![image](https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e)
+![image](https://github.com/user-attachments/assets/87da3d2a-6c7e-47fa-9938-cb98deec8f04) ![image](https://github.com/user-attachments/assets/4d8fcedd-e967-40b6-a1a8-b4fe9eb5f43e)
 
 
 ## 技术栈
